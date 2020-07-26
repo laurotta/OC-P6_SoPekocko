@@ -1,11 +1,21 @@
+// Importation du module de chiffrement
 const bcrypt = require('bcrypt');
+
+// Importation du module de création / vérification de token
 const jwt = require('jsonwebtoken');
+
+// Importation du modèle
 const User = require('../models/User');
 
+// Règles 
 let emailRegEx = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 let passwordRegEx = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,12}$/; // au moins une lettre et un chiffre, min. 8 caractères max. 12
 
-// Création d'un utilisateur
+/* Création d'un utilisateur :
+    - vérifie les formats
+    - hash du mot de passe avec 10 tours d'algorythme
+    - crée l'objet à partir du hash
+    - enregistre l'objet */
 exports.signup = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
@@ -38,7 +48,11 @@ exports.signup = (req, res, next) => {
     }
 };
 
-// Connexion d'un utilisateur existant
+/* Connexion d'un utilisateur existant :
+    - trouve l'utilisateur via son email
+    - compare le mot de passe envoyé avec le hash enregistré
+    - encode un nouveau token grâce à une clé secrète avec l'id utilisateur
+    - valide la connexion en renvoyant le token */
 exports.login = (req, res, next) => {
     User.findOne({
             email: req.body.email

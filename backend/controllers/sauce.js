@@ -1,10 +1,15 @@
+// Importation du modèle
 const Sauce = require('../models/Sauce');
+
+// Importation du module "file system" nécessaire pour la fonction deleteSauce
 const fs = require('fs');
 
-// Créer une sauce
+/* Création d'une sauce :
+    - récupère tous les champs de l'objet
+    - crée l'URL de l'image
+    - enregistre dans la base de données */
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
-    delete sauceObject._id;
     const sauce = new Sauce({
         ...sauceObject,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
@@ -18,7 +23,10 @@ exports.createSauce = (req, res, next) => {
         }));
 };
 
-// Modifier une sauce
+/* Modification d'une sauce :
+    - vérifie s'il y a une nouvelle image, génère l'URL si oui
+    - trouve l'objet à modifier
+    - récupère la nouvelle version de l'objet */
 exports.modifySauce = (req, res, next) => {
     const sauceObject = req.file ? {
         ...JSON.parse(req.body.sauce),
@@ -40,7 +48,11 @@ exports.modifySauce = (req, res, next) => {
         }));
 };
 
-// Supprimer une sauce
+/* Suppression d'une sauce :
+    - trouve l'objet à supprimer
+    - récupère le nom du fichier image à partir de son l'URL
+    - supprime le fichier
+    - supprime l'objet */
 exports.deleteSauce = (req, res, next) => {
     Sauce.findOne({
             _id: req.params.id
@@ -66,7 +78,9 @@ exports.deleteSauce = (req, res, next) => {
 
 };
 
-// Afficher une sauce
+/* Affichage d'une sauce :
+    - trouve l'objet correspondant dans la base de données
+    - retourne l'objet */
 exports.getOneSauce = (req, res, next) => {
     Sauce.findOne({
             _id: req.params.id
@@ -77,7 +91,9 @@ exports.getOneSauce = (req, res, next) => {
         }));
 };
 
-// Afficher toutes les sauces
+/* Affichage de toutes les sauces :
+    - trouve tous les objets de la base de données
+    - retourne les objets */
 exports.getAllSauces = (req, res, next) => {
     Sauce.find()
         .then(sauces => res.status(200).json(sauces))
@@ -88,21 +104,21 @@ exports.getAllSauces = (req, res, next) => {
 
 // Like/dislike une sauce
 exports.likeDislike = (req, res, next) => {
+    const like = req.body.like;
+    const userId = req.body.userId;
 
-    // si l'utilisateur like
-    if (req.body.like === 1) {
+    /* si l'utilisateur like : 
+        - ajoute un like
+        - met l'utilisateur dans le tableau des likes */
+    if (like === 1) {
         Sauce.updateOne({
                 _id: req.params.id
             }, {
-
-                // on ajoute un like
                 $inc: {
                     likes: 1
                 },
-
-                // on ajoute l'utilisateur dans le tableau des likes
                 $push: {
-                    usersLiked: req.body.userId
+                    usersLiked: userId
                 }
             })
             .then(() => res.status(200).json({
@@ -112,20 +128,18 @@ exports.likeDislike = (req, res, next) => {
                 error
             }));
     
-    // si l'utilisateur dislike
-    } else if (req.body.like === -1) {
+    /* si l'utilisateur dislike :
+        - ajoute un dislike
+        - met l'utilisateur dans le tableau des dislikes */
+    } else if (like === -1) {
         Sauce.updateOne({
                 _id: req.params.id
             }, {
-
-                // on ajoute un dislike
                 $inc: {
                     dislikes: 1
                 },
-
-                // on ajoute l'utilisateur dans le tableau des dislikes
                 $push: {
-                    usersDisliked: req.body.userId
+                    usersDisliked: userId
                 }
             })
             .then(() => res.status(200).json({
@@ -142,18 +156,14 @@ exports.likeDislike = (req, res, next) => {
             })
             .then(sauce => {
 
-                // si l'utilisateur est dans le tableau des likes
-                if (sauce.usersLiked.includes(req.body.userId)) {
+                // si l'utilisateur est dans le tableau des likes : utilisateur et like retirés
+                if (sauce.usersLiked.includes(userId)) {
                     Sauce.updateOne({
                             _id: req.params.id
                         }, {
-
-                            // on retire l'utilisateur du tableau
                             $pull: {
-                                usersLiked: req.body.userId
+                                usersLiked: userId
                             },
-
-                            // on enlève un like
                             $inc: {
                                 likes: -1
                             }
@@ -167,18 +177,14 @@ exports.likeDislike = (req, res, next) => {
                             error
                         }))
 
-                // si l'utilisateur est dans le tableau des dislikes
-                } else if (sauce.usersDisliked.includes(req.body.userId)) {
+                // si l'utilisateur est dans le tableau des dislikes : utilisateur et dislike retirés
+                } else if (sauce.usersDisliked.includes(userId)) {
                     Sauce.updateOne({
                             _id: req.params.id
                         }, {
-
-                            // on retire l'utilisateur du tableau
                             $pull: {
-                                usersDisliked: req.body.userId
+                                usersDisliked: userId
                             },
-
-                            // on enlève un dislike
                             $inc: {
                                 dislikes: -1
                             }

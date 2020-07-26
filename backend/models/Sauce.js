@@ -1,5 +1,7 @@
+// Importation de mongoose
 const mongoose = require('mongoose');
 
+// Création du schéma de donnée en fonction des clés et types attendus
 const sauceSchema = mongoose.Schema({
     userId: {
         type: String,
@@ -45,4 +47,5 @@ const sauceSchema = mongoose.Schema({
     },
 });
 
+// Exportation du modèle créé
 module.exports = mongoose.model('Sauce', sauceSchema);
