@@ -13,7 +13,7 @@ let passwordRegEx = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,12}$/; // au moins une 
 
 /* Création d'un utilisateur :
     - vérifie les formats
-    - hash du mot de passe avec 10 tours d'algorythme
+    - hash du mot de passe avec 10 tours d'algorithme
     - crée l'objet à partir du hash
     - enregistre l'objet */
 exports.signup = (req, res, next) => {
